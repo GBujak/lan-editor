@@ -5,6 +5,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.TreeView;
 
+/**
+ * Kontroler głównego okna
+ */
+
 public class MainGuiController {
 
     @FXML

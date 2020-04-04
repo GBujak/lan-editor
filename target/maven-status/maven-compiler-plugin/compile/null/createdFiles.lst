@@ -1,4 +1,1 @@
-lan_editor\SecondaryController.class
-lan_editor\PrimaryController.class
-lan_editor\App.class
-lan_editor\gui\MainGuiController.class
+lan_editor/gui/MainGuiController.class
