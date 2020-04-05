@@ -5,6 +5,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import lan_editor.datastore.dataClasses.Document;
+import lan_editor.datastore.dataClasses.TextBlock;
+import lan_editor.gui.MainGuiController;
 
 import java.io.IOException;
 
@@ -25,7 +28,14 @@ public class App extends Application {
 
     private static Parent loadFXML(String fxml) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-        return fxmlLoader.load();
+        Parent root = fxmlLoader.load();
+        MainGuiController ctrl = fxmlLoader.getController();
+        var doc = new Document();
+        for (int i = 0; i < 20; i++)
+            doc.add(new TextBlock("Hello world"));
+        System.out.println(ctrl);
+        ctrl.setDocument(doc);
+        return root;
     }
 
     public static void main(String[] args) {

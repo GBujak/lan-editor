@@ -8,10 +8,14 @@ import javafx.collections.ObservableList;
  */
 
 public class Document {
-    private ObservableList<BlockInterface> blocks
+    private ObservableList<Block> blocks
             = FXCollections.observableArrayList();
 
-    public ObservableList<BlockInterface> getBlocks() {
+    public ObservableList<Block> getBlocks() {
         return blocks;
+    }
+
+    public void add(Block bl) {
+        blocks.add(bl);
     }
 }

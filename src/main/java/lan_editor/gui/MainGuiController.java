@@ -6,7 +6,9 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.control.TreeView;
 
 import lan_editor.datastore.Datastore;
-import lan_editor.datastore.dataClasses.BlockInterface;
+import lan_editor.datastore.dataClasses.Block;
+import lan_editor.datastore.dataClasses.BlockListCell;
+import lan_editor.datastore.dataClasses.Document;
 
 /**
  * Kontroler głównego okna
@@ -18,16 +20,26 @@ public class MainGuiController {
         datastore = ds;
     }
 
+    private Document document = null;
+    public void setDocument(Document doc) {
+        document = doc;
+        mainListView.setItems(document.getBlocks());
+    }
+
     @FXML
     private TreeView<?> mainTreeView;
 
     @FXML
-    private ListView<BlockInterface> mainListView;
+    private ListView<Block> mainListView;
 
     @FXML
     private ToolBar mainToolBar;
 
     @FXML
     public void initialize() {
+        mainListView.setCellFactory(
+                blockListView -> new BlockListCell());
+        if (document == null) document = new Document();
+        mainListView.setItems(document.getBlocks());
     }
 }
