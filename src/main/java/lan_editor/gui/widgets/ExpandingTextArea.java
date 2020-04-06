@@ -12,9 +12,11 @@ public class ExpandingTextArea extends TextArea {
         super();
         wrapTextProperty().setValue(true);
         setManaged(true);
+        setPrefWidth(500);
 
         this.content = content;
         detectFontChange();
+        fitToText();
 
         this.textProperty().bindBidirectional(this.content.textProperty());
         this.setOnKeyPressed(keyEvent -> {
