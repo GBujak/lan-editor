@@ -2,23 +2,31 @@ package lan_editor.gui.widgets;
 
 import javafx.scene.control.TextArea;
 import javafx.scene.text.Text;
+import lan_editor.datastore.dataClasses.TextBlock;
 import lan_editor.gui.constants.TextTypes;
 
 public class ExpandingTextArea extends TextArea {
+    private TextBlock textBlock;
     private Text content;
-    private double currentHeight = getFont().getSize();
+    private double currentHeight = getFont().getSize() + 20;
 
-    public ExpandingTextArea(Text content) {
+    public TextBlock getTextBlock() {
+        return textBlock;
+    }
+
+    public ExpandingTextArea(TextBlock textBlock) {
         super();
         wrapTextProperty().setValue(true);
         setManaged(true);
         setPrefWidth(500);
 
-        this.content = content;
+        this.textBlock = textBlock;
+        this.content = this.textBlock.getContent();
+        this.textProperty().bindBidirectional(this.content.textProperty());
+
         detectFontChange();
         fitToText();
 
-        this.textProperty().bindBidirectional(this.content.textProperty());
         this.setOnKeyPressed(keyEvent -> {
             detectFontChange();
             fitToText();

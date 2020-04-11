@@ -1,8 +1,8 @@
-lan_editor/datastore/dataClasses/TextBlock.class
-lan_editor/datastore/dataClasses/Document.class
-lan_editor/networking/Networker.class
-lan_editor/gui/constants/TextTypes.class
-lan_editor/datastore/dataClasses/BlockListCell.class
-lan_editor/datastore/dataClasses/Block.class
-lan_editor/datastore/Datastore.class
-lan_editor/gui/widgets/ExpandingTextArea.class
+lan_editor\datastore\Datastore.class
+lan_editor\networking\Networker.class
+lan_editor\datastore\dataClasses\Document.class
+lan_editor\datastore\dataClasses\TextBlock.class
+lan_editor\gui\widgets\ExpandingTextArea.class
+lan_editor\datastore\dataClasses\Block.class
+lan_editor\datastore\dataClasses\BlockListCell.class
+lan_editor\gui\constants\TextTypes.class

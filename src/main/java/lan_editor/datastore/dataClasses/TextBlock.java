@@ -15,14 +15,18 @@ import lan_editor.gui.widgets.ExpandingTextArea;
 
 public class TextBlock extends Block {
     private Text content = new Text();
-    private ExpandingTextArea textArea = new ExpandingTextArea(content);
+    public Text getContent() {
+        return content;
+    }
+
+    private ExpandingTextArea textArea = new ExpandingTextArea(this);
 
     public TextBlock(String str) {
         content.setText(str);
     }
 
     @Override
-    public Node getNode() {
+    public ExpandingTextArea getNode() {
         return textArea;
     }
 }
