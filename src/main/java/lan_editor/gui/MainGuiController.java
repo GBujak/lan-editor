@@ -1,7 +1,5 @@
 package lan_editor.gui;
 
-import com.sun.source.tree.ExpressionStatementTree;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ToolBar;
@@ -15,8 +13,6 @@ import lan_editor.datastore.dataClasses.BlockListCell;
 import lan_editor.datastore.dataClasses.Document;
 import lan_editor.datastore.dataClasses.TextBlock;
 import lan_editor.gui.widgets.ExpandingTextArea;
-import org.w3c.dom.Text;
-
 
 /**
  * Kontroler głównego okna
@@ -55,22 +51,26 @@ public class MainGuiController {
     }
 
     private void handleKeyEvent(KeyEvent ev) {
+        // Enter tworzy nowe pole
         var selected = mainListView.getScene().getFocusOwner();
         if (ev.getCode() == KeyCode.ENTER) {
-            if (selected instanceof ExpandingTextArea) {
-                var newBlock = new TextBlock("");
+            if (selected instanceof ExpandingTextArea && !ev.isShiftDown()) {
+                var selTextArea = (ExpandingTextArea) selected;
+                var caret = selTextArea.getCaretPosition();
+                var newBlock = new TextBlock(selTextArea.getText().substring(caret));
+                selTextArea.setText(selTextArea.getText(0, caret));
                 document.getBlocks().add(
-                        document.getBlocks().indexOf(((ExpandingTextArea)selected).getTextBlock()) + 1,
+                        document.getBlocks().indexOf(selTextArea.getTextBlock()) + 1,
                         newBlock
                 );
                 newBlock.getNode().requestFocus();
+                ev.consume();
             }
-            if (!ev.isShiftDown()) ev.consume();
         }
 
         // Backspace usuwa puste pole
         if (ev.getCode() == KeyCode.BACK_SPACE) {
-            if (selected instanceof ExpandingTextArea) {
+            if (selected instanceof ExpandingTextArea && !ev.isShiftDown()) {
                 var selTextArea = (ExpandingTextArea) selected;
                 var caretPos = selTextArea.getCaretPosition();
                 if (caretPos != 0) return;
