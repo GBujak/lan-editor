@@ -45,8 +45,6 @@ public class MainGuiController {
     public void initialize() {
         mainListView.setCellFactory(
                 blockListView -> new BlockListCell());
-        if (document == null) document = new Document();
-        mainListView.setItems(document.getBlocks());
         mainListView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
     }
 

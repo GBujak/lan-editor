@@ -5,6 +5,7 @@ package lan_editor.datastore;
  */
 
 public class Datastore {
+
     public void saveToFile() {
 
     }

@@ -1,5 +1,6 @@
 package lan_editor.gui.widgets;
 
+import javafx.geometry.Insets;
 import javafx.scene.control.TextArea;
 import javafx.scene.text.Text;
 import lan_editor.datastore.dataClasses.TextBlock;
@@ -35,20 +36,25 @@ public class ExpandingTextArea extends TextArea {
 
     public void fitToText() {
         if (currentHeight < 50) currentHeight = 50;
-
         Text tx = (Text) this.lookup(".text");
         if (tx != null) {
             currentHeight = Math.max(
                     getFont().getSize() + 20,
                     tx.getBoundsInLocal().getHeight() + 20);
         }
-
         setPrefHeight(currentHeight);
     }
 
     private void detectFontChange() {
         if (content.getText().startsWith("# "))
             this.setFont(TextTypes.header1);
-        else this.setFont(TextTypes.defaultFont);
+        else if (content.getText().startsWith("## "))
+            this.setFont(TextTypes.header2);
+        else if (content.getText().startsWith("### "))
+            this.setFont(TextTypes.header3);
+        else if (this.getFont() != TextTypes.defaultFont)
+            this.setFont(TextTypes.defaultFont);
+        else if (this.getText().startsWith("```"))
+            this.setFont(TextTypes.monoFont);
     }
 }

@@ -30,11 +30,7 @@ public class App extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         Parent root = fxmlLoader.load();
         MainGuiController ctrl = fxmlLoader.getController();
-        var doc = new Document();
-        for (int i = 0; i < 20; i++)
-            doc.add(new TextBlock("Hello world"));
         System.out.println(ctrl);
-        ctrl.setDocument(doc);
         return root;
     }
 

@@ -14,8 +14,4 @@ public class Document {
     public ObservableList<Block> getBlocks() {
         return blocks;
     }
-
-    public void add(Block bl) {
-        blocks.add(bl);
-    }
 }

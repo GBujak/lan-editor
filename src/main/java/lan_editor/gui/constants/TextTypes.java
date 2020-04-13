@@ -10,5 +10,7 @@ public class TextTypes {
     public static final Font header3 =
             new Font(20);
     public static final Font defaultFont =
-            new Font(14);
+            new Font(16);
+    public static final Font monoFont =
+            new Font("monospace", 16);
 }
