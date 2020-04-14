@@ -19,6 +19,10 @@ public class TextBlock extends Block {
         return content;
     }
 
+    public void setContent(String newContent) {
+        content.setText(newContent);
+    }
+
     private ExpandingTextArea textArea = new ExpandingTextArea(this);
 
     public TextBlock(String str) {

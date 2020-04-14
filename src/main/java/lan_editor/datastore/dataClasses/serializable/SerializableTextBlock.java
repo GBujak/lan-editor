@@ -16,4 +16,9 @@ public class SerializableTextBlock extends SerializableBlock
     public Block toBlock() {
         return new TextBlock(content);
     }
+
+    @Override
+    public void setContent(String newContent) {
+        content = newContent;
+    }
 }

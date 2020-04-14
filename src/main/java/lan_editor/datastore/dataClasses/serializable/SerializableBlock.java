@@ -7,4 +7,5 @@ import java.io.Serializable;
 public abstract class SerializableBlock
         implements Serializable {
     public abstract Block toBlock();
+    public abstract void setContent(String newContent);
 }

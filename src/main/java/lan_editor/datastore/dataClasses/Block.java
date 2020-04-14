@@ -8,4 +8,5 @@ import javafx.scene.Node;
 
 public abstract class Block {
     public abstract Node getNode();
+    public abstract void setContent(String newContent);
 }
