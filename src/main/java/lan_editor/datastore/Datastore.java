@@ -1,11 +1,12 @@
 package lan_editor.datastore;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import lan_editor.datastore.dataClasses.Document;
 import lan_editor.datastore.dataClasses.serializable.SerializableBlock;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Optional;
@@ -28,9 +29,31 @@ public class Datastore {
         return Optional.of(doc);
     }
 
-    public void saveToStream(OutputStream stream) {
+    public boolean saveToStream(OutputStream stream) {
+        var writer = new OutputStreamWriter(stream);
+        var gson = new Gson();
+        try {
+            writer.write(gson.toJson(documents));
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
-    public void loadFromStream(InputStream stream) {
+    public boolean loadFromStream(InputStream stream) {
+        var reader = new BufferedReader(new InputStreamReader(stream));
+        var gson = new Gson();
+
+        try {
+            documents = gson.fromJson(reader.readLine(), new TypeToken<
+                    Hashtable<String, List<SerializableBlock>>>(){}.getType());
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JsonSyntaxException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
     }
 }
