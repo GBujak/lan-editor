@@ -30,8 +30,6 @@ public class MainGuiController {
         mainListView.setItems(document.getBlocks());
     }
 
-
-
     @FXML
     private TreeView<?> mainTreeView;
 
@@ -46,6 +44,10 @@ public class MainGuiController {
         mainListView.setCellFactory(
                 blockListView -> new BlockListCell());
         mainListView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
+
+        var doc = new Document();
+        doc.getBlocks().add(new TextBlock(""));
+        this.setDocument(doc);
     }
 
     private void handleKeyEvent(KeyEvent ev) {
