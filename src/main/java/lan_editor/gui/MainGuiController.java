@@ -1,9 +1,7 @@
 package lan_editor.gui;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ToolBar;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -13,12 +11,15 @@ import lan_editor.datastore.dataClasses.BlockListCell;
 import lan_editor.datastore.dataClasses.Document;
 import lan_editor.datastore.dataClasses.TextBlock;
 import lan_editor.gui.widgets.ExpandingTextArea;
+import lan_editor.networking.Networker;
 
 /**
  * Kontroler głównego okna
  */
 
 public class MainGuiController {
+    private Networker networker;
+
     private Datastore datastore = null;
     void injectDatastore(Datastore ds) {
         datastore = ds;
@@ -29,6 +30,9 @@ public class MainGuiController {
         document = doc;
         mainListView.setItems(document.getBlocks());
     }
+    public Document getDocument() {
+        return document;
+    }
 
     @FXML
     private TreeView<?> mainTreeView;
@@ -38,6 +42,18 @@ public class MainGuiController {
 
     @FXML
     private ToolBar mainToolBar;
+
+    @FXML
+    private Button joinButton;
+
+    @FXML
+    private Button hostButton;
+
+    @FXML
+    private TextField addressField;
+
+    @FXML
+    private TextField portField;
 
     @FXML
     public void initialize() {

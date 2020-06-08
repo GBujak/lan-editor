@@ -9,7 +9,7 @@ public class RemoveBlockAction extends DocumentAction {
     private int blockIndex;
 
     public RemoveBlockAction(int actionId, String docName, int blockIndex) {
-        super(actionId, docName);
+        super(docName);
         this.blockIndex = blockIndex;
     }
 

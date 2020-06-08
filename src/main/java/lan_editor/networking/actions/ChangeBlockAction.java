@@ -11,7 +11,7 @@ public class ChangeBlockAction extends DocumentAction {
 
     public ChangeBlockAction(
             int actionId, String docName, int blockIndex, String blockContent) {
-        super(actionId, docName);
+        super(docName);
         this.blockIndex = blockIndex;
         this.blockContent = blockContent;
     }

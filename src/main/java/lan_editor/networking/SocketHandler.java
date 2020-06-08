@@ -24,13 +24,17 @@ public class SocketHandler implements Runnable {
     @Override
     public void run() {
         while (!sock.isClosed()) {
+            DocumentAction action;
+
             try {
                 var json = reader.readLine();
                 var gson = new Gson();
-                DocumentAction action = gson.fromJson(json, DocumentAction.class);
+                action = gson.fromJson(json, DocumentAction.class);
             } catch (Exception e) {e.printStackTrace();}
 
             // run action
+            Platform.runLater(() -> {
+            });
         }
     }
 }

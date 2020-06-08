@@ -12,7 +12,7 @@ public class AddBlockAction extends DocumentAction {
     public AddBlockAction(
             int actionId, String docName,
             int blockIndex, SerializableBlock block) {
-        super(actionId, docName);
+        super(docName);
         this.blockIndex = blockIndex;
         this.block = block;
     }
