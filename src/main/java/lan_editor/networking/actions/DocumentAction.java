@@ -7,20 +7,14 @@ import java.io.Serializable;
 import java.util.List;
 
 public abstract class DocumentAction implements Serializable {
-    private int actionId;
     private String docName;
 
-    public DocumentAction(int actionId, String docName) {
-        this.actionId = actionId;
+    public DocumentAction(String docName) {
         this.docName = docName;
     }
 
     public String getDocumentName() {
         return docName;
-    }
-
-    public int getActionId() {
-        return actionId;
     }
 
     public abstract void commit(List<SerializableBlock> document);
