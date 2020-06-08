@@ -19,12 +19,12 @@ public class Dispatcher {
     }
 
     public void dispatch() {
-        for (var client : sockets) {
-            int lastClientAction = client.getValue();
-            Socket clientSocket = client.getKey();
+        for (int i = 0; i < sockets.size(); i++) {
+            int lastClientAction = sockets.get(i).getValue();
+            Socket clientSocket  = sockets.get(i).getKey();
             if (actions.size() > lastClientAction) {
-                for (int i = lastClientAction + 1; i < actions.size(); i++) {
-                    var action = actions.get(i);
+                for (int j = lastClientAction + 1; j < actions.size(); j++) {
+                    var action = actions.get(j);
                     try {
                         var writer = new PrintWriter(clientSocket.getOutputStream(), true);
                         var gson = new Gson();
@@ -35,6 +35,7 @@ public class Dispatcher {
                         e.printStackTrace();
                     }
                 }
+                sockets.set(i, new Pair<>(clientSocket, actions.size()));
             }
         }
     }
