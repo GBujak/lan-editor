@@ -1,5 +1,7 @@
 package lan_editor.networking;
 
+import lan_editor.gui.MainGuiController;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.channels.SocketChannel;
@@ -9,6 +11,14 @@ import java.nio.channels.SocketChannel;
  */
 
 public class Networker implements Runnable {
+    Dispatcher dispatcher;
+
+    MainGuiController gui;
+    public Networker(MainGuiController gui) {
+        this.gui = gui;
+        this.dispatcher = new Dispatcher();
+    }
+
     ServerSocket sock;
     @Override
     public void run() {
@@ -21,7 +31,8 @@ public class Networker implements Runnable {
         while (true) {
             try {
                 var newClient = sock.accept();
-
+                dispatcher.addSocket(newClient);
+                new Thread(new SocketHandler(gui, dispatcher, newClient)).start();
             } catch (IOException e) {e.printStackTrace();}
         }
     }

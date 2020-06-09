@@ -17,10 +17,12 @@ public class SocketHandler implements Runnable {
     private Socket sock;
 
     private MainGuiController gui;
+    private Dispatcher dispatcher;
 
-    public SocketHandler(MainGuiController gui, Socket sock) {
+    public SocketHandler(MainGuiController gui, Dispatcher dispatcher, Socket sock) {
         this.gui = gui;
         this.sock = sock;
+        this.dispatcher = dispatcher;
         try {
             reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
         } catch (IOException e) {e.printStackTrace();}
@@ -37,6 +39,7 @@ public class SocketHandler implements Runnable {
                 action = gson.fromJson(json, DocumentAction.class);
             } catch (Exception e) {
                 e.printStackTrace();
+                dispatcher.remove(sock);
                 return;
             }
 
