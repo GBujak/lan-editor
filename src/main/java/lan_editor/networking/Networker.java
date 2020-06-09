@@ -32,7 +32,9 @@ public class Networker implements Runnable {
             try {
                 var newClient = sock.accept();
                 dispatcher.addSocket(newClient);
-                new Thread(new SocketHandler(gui, dispatcher, newClient)).start();
+                var thread = new Thread(new SocketHandler(gui, dispatcher, newClient));
+                thread.setDaemon(true);
+                thread.start();
             } catch (IOException e) {e.printStackTrace();}
         }
     }
