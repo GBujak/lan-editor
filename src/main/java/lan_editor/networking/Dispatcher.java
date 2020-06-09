@@ -17,11 +17,16 @@ public class Dispatcher {
 
     public void addSocket(Socket sock) {
         sockets.put(sock, 0);
-        this.dispatch();
+        dispatch();
     }
 
     public void remove(Socket sock) {
         sockets.remove(sock);
+    }
+
+    public void addAction(DocumentAction action) {
+        actions.add(action);
+        dispatch();
     }
 
     public void dispatch() {
