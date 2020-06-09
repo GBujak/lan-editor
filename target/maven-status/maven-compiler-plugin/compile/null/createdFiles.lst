@@ -7,6 +7,7 @@ lan_editor/datastore/dataClasses/Block.class
 lan_editor/datastore/Datastore.class
 lan_editor/networking/actions/ChangeBlockAction.class
 lan_editor/gui/MainGuiController.class
+lan_editor/networking/SocketHandler.class
 lan_editor/datastore/dataClasses/Document.class
 lan_editor/networking/actions/GlobalAction.class
 lan_editor/gui/constants/TextTypes.class
@@ -14,4 +15,5 @@ lan_editor/datastore/dataClasses/serializable/SerializableBlock.class
 lan_editor/networking/actions/AddBlockAction.class
 lan_editor/datastore/dataClasses/serializable/SerializableTextBlock.class
 lan_editor/gui/widgets/ExpandingTextArea.class
+lan_editor/networking/Dispatcher.class
 lan_editor/datastore/Datastore$1.class

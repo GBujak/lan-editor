@@ -9,22 +9,28 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Dispatcher {
     ArrayList<DocumentAction> actions = new ArrayList<>();
-    ArrayList<Pair<Socket, Integer>> sockets = new ArrayList<>();
+    HashMap<Socket, Integer> sockets = new HashMap<>();
 
     public void addSocket(Socket sock) {
-        sockets.add(new Pair<>(sock, 0));
+        sockets.put(sock, 0);
+        this.dispatch();
+    }
+
+    public void remove(Socket sock) {
+        sockets.remove(sock);
     }
 
     public void dispatch() {
-        for (int i = 0; i < sockets.size(); i++) {
-            int lastClientAction = sockets.get(i).getValue();
-            Socket clientSocket  = sockets.get(i).getKey();
+        for (var socket : sockets.entrySet()) {
+            int lastClientAction = socket.getValue();
+            Socket clientSocket  = socket.getKey();
             if (actions.size() > lastClientAction) {
-                for (int j = lastClientAction + 1; j < actions.size(); j++) {
-                    var action = actions.get(j);
+                for (int i = lastClientAction + 1; i < actions.size(); i++) {
+                    var action = actions.get(i);
                     try {
                         var writer = new PrintWriter(clientSocket.getOutputStream(), true);
                         var gson = new Gson();
@@ -35,7 +41,7 @@ public class Dispatcher {
                         e.printStackTrace();
                     }
                 }
-                sockets.set(i, new Pair<>(clientSocket, actions.size()));
+                socket.setValue(actions.size());
             }
         }
     }
