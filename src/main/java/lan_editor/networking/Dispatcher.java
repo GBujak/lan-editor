@@ -7,46 +7,56 @@ import lan_editor.networking.actions.DocumentAction;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Dispatcher {
-    ArrayList<DocumentAction> actions = new ArrayList<>();
+/**
+ * Dispatcher rozsyła T do socketów, które przechowuje
+ * wszystkie metody są synchronizowane
+ *
+ * @param <T> to rozsyłany obiekt implementujący Serializable
+ */
+public class Dispatcher<T extends Serializable> {
+    ArrayList<T> items = new ArrayList<>();
+
+    /// Przechowuje socket oraz id ostatniego itemu, który został wysłany do tego socketa
     HashMap<Socket, Integer> sockets = new HashMap<>();
 
-    public void addSocket(Socket sock) {
+    public synchronized void addSocket(Socket sock) {
+        System.out.println("added sock: " + sock.getInetAddress().getHostName());
         sockets.put(sock, 0);
         dispatch();
     }
 
-    public void remove(Socket sock) {
+    public synchronized void remove(Socket sock) {
         sockets.remove(sock);
     }
 
-    public void addAction(DocumentAction action) {
-        actions.add(action);
+    public synchronized void addAndDispatch(T item) {
+        items.add(item);
         dispatch();
     }
 
-    public void dispatch() {
-        for (var socket : sockets.entrySet()) {
-            int lastClientAction = socket.getValue();
-            Socket clientSocket  = socket.getKey();
-            if (actions.size() > lastClientAction) {
-                for (int i = lastClientAction + 1; i < actions.size(); i++) {
-                    var action = actions.get(i);
+    public synchronized void dispatch() {
+        for (var entry : sockets.entrySet()) {
+            int lastClientAction = entry.getValue();
+            Socket clientSocket  = entry.getKey();
+            if (items.size() > lastClientAction) {
+                for (int i = lastClientAction; i < items.size(); i++) {
+                    var item = items.get(i);
                     try {
                         var writer = new PrintWriter(clientSocket.getOutputStream(), true);
                         var gson = new Gson();
-                        var json = gson.toJson(action);
-                        System.out.println("wysylam " + json + " do " + clientSocket.getInetAddress().getHostName());
-                        writer.println(gson.toJson(action));
+                        var json = gson.toJson(item);
+                        System.out.println("sending " + json + " to " + clientSocket.getInetAddress().getHostName());
+                        writer.println(json);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-                socket.setValue(actions.size());
+                entry.setValue(items.size());
             }
         }
     }

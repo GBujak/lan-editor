@@ -1,6 +1,7 @@
 package lan_editor.networking;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
 import lan_editor.gui.MainGuiController;
 import lan_editor.networking.actions.DocumentAction;
@@ -8,19 +9,21 @@ import lan_editor.networking.actions.DocumentAction;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
+import java.util.function.Consumer;
 
-public class SocketHandler implements Runnable {
+public class SocketHandler<T extends Serializable> implements Runnable {
     private BufferedReader reader;
     private Socket sock;
 
-    private MainGuiController gui;
-    private Dispatcher dispatcher;
+    private Consumer<T> consumer;
+    private Dispatcher<T> dispatcher;
 
-    public SocketHandler(MainGuiController gui, Dispatcher dispatcher, Socket sock) {
-        this.gui = gui;
+    public SocketHandler(Consumer<T> onReceive, Dispatcher<T> dispatcher, Socket sock) {
+        this.consumer = onReceive;
         this.sock = sock;
         this.dispatcher = dispatcher;
         try {
@@ -31,20 +34,21 @@ public class SocketHandler implements Runnable {
     @Override
     public void run() {
         while (!sock.isClosed()) {
-            DocumentAction action;
+            T received;
 
             try {
                 var json = reader.readLine();
                 var gson = new Gson();
-                action = gson.fromJson(json, DocumentAction.class);
+                var receiveType = new TypeToken<T>(){}.getType();
+                received = gson.fromJson(json, receiveType);
             } catch (Exception e) {
                 e.printStackTrace();
                 dispatcher.remove(sock);
                 return;
             }
 
-            // run action on gui thread
-            Platform.runLater(() -> action.commit(gui.getDocument()));
+            consumer.accept(received);
         }
+        dispatcher.remove(sock);
     }
 }

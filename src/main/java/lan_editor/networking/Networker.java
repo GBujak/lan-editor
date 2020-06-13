@@ -4,47 +4,50 @@ import com.sun.tools.javac.Main;
 import lan_editor.gui.MainGuiController;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Klasa zajmująca się komunikacją sieciową z serwerem i innymi klientami
  */
 
-public class Networker implements Runnable {
-    private Dispatcher dispatcher;
+public class Networker<T extends Serializable> implements Runnable {
+    private Dispatcher<T> dispatcher;
     private boolean iAmServer;
 
     private int port;
     private String address;
 
-    MainGuiController gui;
-    public Networker(MainGuiController gui, boolean isServer, String address, int port) {
+    private Consumer<T> consumer;
+
+    public Networker(boolean isServer, String address, int port, Consumer<T> onReceive) {
         if (address == null && !isServer)
             throw new IllegalArgumentException("adres nie moze byc null dla klienta");
         this.address = address;
         this.port = port;
         this.iAmServer = isServer;
-        this.gui = gui;
-        this.dispatcher = new Dispatcher();
+        this.consumer = onReceive;
+        this.dispatcher = new Dispatcher<T>();
     }
 
-    public static Networker makeServer(MainGuiController gui, int port) {
-        return new Networker(gui, true, null, port);
+    public static <T extends Serializable> Networker<T> makeServer(int port, Consumer<T> onReceive) {
+        return new Networker<T>(true, null, port, onReceive);
     }
 
-    public static Networker makeClient(MainGuiController gui, String address, int port) {
-        return new Networker(gui, false, address, port);
+    public static <T extends Serializable> Networker<T> makeClient(String address, int port, Consumer<T> onReceive) {
+        return new Networker<T>(false, address, port, onReceive);
     }
 
     ServerSocket sock;
     @Override
     public void run() {
         if (iAmServer)
-             server();
+            server();
         else client();
     }
 
@@ -58,8 +61,9 @@ public class Networker implements Runnable {
         while (true) {
             try {
                 var newClient = sock.accept();
+                System.out.println("accepted: " + newClient.getInetAddress().getHostName());
                 dispatcher.addSocket(newClient);
-                var thread = new Thread(new SocketHandler(gui, dispatcher, newClient));
+                var thread = new Thread(new SocketHandler<T>(consumer, dispatcher, newClient));
                 thread.setDaemon(true);
                 thread.start();
             } catch (IOException e) {e.printStackTrace();}
@@ -67,7 +71,7 @@ public class Networker implements Runnable {
     }
 
     private void client() {
-        dispatcher = new Dispatcher();
+        dispatcher = new Dispatcher<T>();
         Socket sock;
         try {
             sock = new Socket();
@@ -78,8 +82,12 @@ public class Networker implements Runnable {
             return; // trzeba, bo inaczej ostrzega że zmienna sock może być niezainicjalizowana
         }
         dispatcher.addSocket(sock);
-        var handlerThread = new Thread(new SocketHandler(gui, dispatcher, sock));
+        var handlerThread = new Thread(new SocketHandler<T>(consumer, dispatcher, sock));
         handlerThread.setDaemon(true);
         handlerThread.start();
+    }
+
+    public synchronized void send(T item) {
+        dispatcher.addAndDispatch(item);
     }
 }
