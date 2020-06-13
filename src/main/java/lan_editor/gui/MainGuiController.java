@@ -1,10 +1,12 @@
 package lan_editor.gui;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Background;
 import lan_editor.datastore.Datastore;
 import lan_editor.datastore.dataClasses.Block;
 import lan_editor.datastore.dataClasses.BlockListCell;
@@ -12,20 +14,21 @@ import lan_editor.datastore.dataClasses.Document;
 import lan_editor.datastore.dataClasses.TextBlock;
 import lan_editor.gui.widgets.ExpandingTextArea;
 import lan_editor.networking.Networker;
+import lan_editor.networking.actions.DocumentAction;
+
+import java.util.function.Consumer;
 
 /**
  * Kontroler głównego okna
  */
 
 public class MainGuiController {
-    private Networker networker;
+    private Networker<DocumentAction> networker;
 
-    private Datastore datastore = null;
-    void injectDatastore(Datastore ds) {
-        datastore = ds;
-    }
+    private Datastore datastore = new Datastore();
 
     private Document document = null;
+
     public void setDocument(Document doc) {
         document = doc;
         mainListView.setItems(document.getBlocks());
@@ -61,9 +64,53 @@ public class MainGuiController {
                 blockListView -> new BlockListCell());
         mainListView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
 
+        joinButton.setOnAction(this::handleJoin);
+        hostButton.setOnAction(this::handleHost);
+
         var doc = new Document();
         doc.getBlocks().add(new TextBlock(""));
         this.setDocument(doc);
+    }
+
+    private Consumer<DocumentAction> consumer = action -> {
+        action.commit(this.getDocument());
+    };
+
+    private void handleJoin(ActionEvent ev) {
+        var url = addressField.getText();
+        int port = 0;
+        try {
+            port = Integer.parseInt(portField.getText());
+        } catch (NumberFormatException e) {
+            portField.setText("");
+            return;
+        }
+
+        this.networker = Networker.makeClient(
+                url, port,
+                consumer
+        );
+
+        portField.setDisable(true);
+        addressField.setDisable(true);
+    }
+
+    private void handleHost(ActionEvent ev) {
+        int port = 0;
+        try {
+            port = Integer.parseInt(portField.getText());
+        } catch (NumberFormatException e) {
+            portField.setText("");
+            return;
+        }
+
+        this.networker = Networker.makeServer(
+                port,
+                consumer
+        );
+
+        portField.setDisable(true);
+        addressField.setDisable(true);
     }
 
     private void handleKeyEvent(KeyEvent ev) {
