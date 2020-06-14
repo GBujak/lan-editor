@@ -75,3 +75,51 @@ wszystko co znajdowało się za kursorem w polu tekstowym.
 Wciśnięcie backspace, gdy kursor znajduje się na początku pola tekstowego
 powoduje skasowanie tego pola tekstowego i skopiowanie jego zawartości za
 kursorem do poprzedniego pola tekstowego.
+
+# Rozsyłane wiadomości
+
+- pochodne klasy `DocumentAction`.
+
+    - `AddBlockAction` - dodanie nowego bloku w edytorze
+    - `ChangeBlockAction` - zmiana tekstu w bloku
+    - `RemoveBlockAction` - usunięcie bloku
+
+    Pochodne tej klasy mają metody:
+
+    - `void commit(Document)` - do wprowadzania zmian w edytowanym w tej chwili
+        dokumencie
+
+    - `void commit(List<SerializableBlock>)` - do wprowadzania zmian w
+        dokumencie znajdującym się w postaci serializowanej w `Datastore`
+
+
+# Produkowanie wiadomości przez edytor
+
+Podczas pisania, edytor generuje wiadomości. Są do obiekty klasy
+`DocumentAction`. Tutaj opisaliśmy warunki generowania wiadomości:
+
+- zmiana zawartości pola tekstowego
+  
+    -> wygenerowanie wiadomości `ChangeBlockAction`
+
+- usunięcie bloku
+
+    -> wygenerowanie wiadomości `RemoveBlockAction`
+
+    -> wygenerowanie wiadomości `ChangeBlockAction` dla bloku przed usuniętym na
+    wypadek przeniesienia do niego tekstu z usuniętego
+
+- dodanie bloku
+
+    -> wygenerowanie wiadomości `AddBlockAction`
+
+    -> wygenerowanie wiadomości `ChangeBlockAction` dla bloku, w którym
+    znajdował się kusor na wypadek przeniesienia z niego tekstu do nowego bloku
+
+Nie jest możliwe przeniesienie tekstu do następnego bloku, dlatego żadna akcja
+nie generuje wiadomości `ChangeBlockAction` dla bloku znajdującego się pod
+aktywnym.
+
+# Praca na wielu dokumentach
+
+TODO!
