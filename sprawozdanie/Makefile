@@ -1,2 +1,3 @@
 default:
-	pandoc sprawozdanie.md -o sprawozdanie.pdf
+	pandoc --pdf-engine=xelatex \
+	sprawozdanie.md -o sprawozdanie.pdf

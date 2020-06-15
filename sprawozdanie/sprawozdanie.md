@@ -9,6 +9,9 @@ lang: pl
 pagesize: a4
 geometry: margin=2.5cm
 toc: t
+mainfont: Lato
+boldfont: Ubuntu
+monofont: Inconsolata
 ---
 
 # Założenia projektu
@@ -80,17 +83,17 @@ kursorem do poprzedniego pola tekstowego.
 
 - pochodne klasy `DocumentAction`.
 
-    - `AddBlockAction` - dodanie nowego bloku w edytorze
-    - `ChangeBlockAction` - zmiana tekstu w bloku
-    - `RemoveBlockAction` - usunięcie bloku
+    - `AddBlockAction` - dodanie nowego bloku w edytorze.
+    - `ChangeBlockAction` - zmiana tekstu w bloku.
+    - `RemoveBlockAction` - usunięcie bloku.
 
     Pochodne tej klasy mają metody:
 
     - `void commit(Document)` - do wprowadzania zmian w edytowanym w tej chwili
-        dokumencie
+        dokumencie.
 
     - `void commit(List<SerializableBlock>)` - do wprowadzania zmian w
-        dokumencie znajdującym się w postaci serializowanej w `Datastore`
+        dokumencie znajdującym się w postaci serializowanej w `Datastore`.
 
 
 # Produkowanie wiadomości przez edytor
@@ -98,28 +101,63 @@ kursorem do poprzedniego pola tekstowego.
 Podczas pisania, edytor generuje wiadomości. Są do obiekty klasy
 `DocumentAction`. Tutaj opisaliśmy warunki generowania wiadomości:
 
-- zmiana zawartości pola tekstowego
+- zmiana zawartości pola tekstowego:
   
-    -> wygenerowanie wiadomości `ChangeBlockAction`
+    -> wygenerowanie wiadomości `ChangeBlockAction`.
 
-- usunięcie bloku
+- usunięcie bloku:
 
-    -> wygenerowanie wiadomości `RemoveBlockAction`
+    -> wygenerowanie wiadomości `RemoveBlockAction`,
 
     -> wygenerowanie wiadomości `ChangeBlockAction` dla bloku przed usuniętym na
-    wypadek przeniesienia do niego tekstu z usuniętego
+    wypadek przeniesienia do niego tekstu z usuniętego.
 
-- dodanie bloku
+- dodanie bloku:
 
-    -> wygenerowanie wiadomości `AddBlockAction`
+    -> wygenerowanie wiadomości `AddBlockAction`,
 
     -> wygenerowanie wiadomości `ChangeBlockAction` dla bloku, w którym
-    znajdował się kusor na wypadek przeniesienia z niego tekstu do nowego bloku
+    znajdował się kusor na wypadek przeniesienia z niego tekstu do nowego bloku.
 
 Nie jest możliwe przeniesienie tekstu do następnego bloku, dlatego żadna akcja
 nie generuje wiadomości `ChangeBlockAction` dla bloku znajdującego się pod
 aktywnym.
 
-# Praca na wielu dokumentach
+# Reprezentacja dokumentu
 
-TODO!
+Obiekt klasy `Document` reprezentuje edytowany w tej chwili dokument. Klasa
+zawiera pole typu `ObservableList<Block>`, który nie może być serializowany.
+
+Funkcjonalność programu w dużym stopniu zależy od tego obiektu. Jest on
+obserwowany dwukierunkowo przez `MainGuiController`. Dzięki temu, każda zmiana
+w polach tekstowych jest automatycznie synchronizowana z obiektami klasy `Block`
+przechowywanymi w obiekcie `Document`.
+
+`Block` jest klasą abstrakcyjną. Jedyną klasą dziedziczącą po `Block` jest
+`TextBlock`, który reprezentuje blok tekstu. Nie zdążyliśmy zaimplementować
+innych rodzajów bloków, które mogłyby reprezentować np. wklejone zdjęcie.
+
+# Serializowanie dokumentów
+
+Przez brak możliwości serializacji bloków oraz obiektów klasy `Document`,
+stworzyliśmy serializowalne odpowiedniki do przechowywania w obiekcie
+`Datastore` i do zapisywania na dysku:
+
+- `Block` -> `SerializableBlock`
+
+    Klasa abstrakcyjna posiadająca abstrakcyjne metody:
+
+    - `abstract Block toBlock()`:
+
+        Konwersja na obiekt `Block` do populacji obiektu `Document`.
+
+    - `abstract void setContent(String newContent)`:
+
+        Zmiana zawartości. Może to być nowy tekst lub nowa ścieżka do zdjęcia.
+        Tej funkcji używją obiekty klasy `DocumentAction`.
+
+- `TextBlock` -> `SerializableTextBlock`:
+
+    Klasa nieabstrakcyjna reprezenująca blok tekstu. Zawarta w całości w
+    obiekcie `ChangeBlockAction`.
+
