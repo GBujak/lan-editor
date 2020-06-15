@@ -91,6 +91,10 @@ public class MainGuiController {
                 consumer
         );
 
+        var thread = new Thread(this.networker);
+        thread.setDaemon(true);
+        thread.start();
+
         portField.setDisable(true);
         addressField.setDisable(true);
     }
@@ -108,6 +112,10 @@ public class MainGuiController {
                 port,
                 consumer
         );
+
+        var thread = new Thread(this.networker);
+        thread.setDaemon(true);
+        thread.start();
 
         portField.setDisable(true);
         addressField.setDisable(true);
