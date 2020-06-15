@@ -22,7 +22,10 @@ public class SocketHandler<T extends Serializable> implements Runnable {
     private Consumer<T> consumer;
     private Dispatcher<T> dispatcher;
 
+    private Type typetoken;
+
     public SocketHandler(Consumer<T> onReceive, Dispatcher<T> dispatcher, Socket sock) {
+        typetoken = new TypeToken<T>(){}.getType();
         this.consumer = onReceive;
         this.sock = sock;
         this.dispatcher = dispatcher;
@@ -31,16 +34,19 @@ public class SocketHandler<T extends Serializable> implements Runnable {
         } catch (IOException e) {e.printStackTrace();}
     }
 
+    static private <T> T parseJson(String json) {
+        var gson = new Gson();
+        var type = new TypeToken<T>(){}.getType();
+        return gson.fromJson(json, type);
+    }
+
     @Override
     public void run() {
         while (!sock.isClosed()) {
             T received;
 
             try {
-                var json = reader.readLine();
-                var gson = new Gson();
-                var receiveType = new TypeToken<T>(){}.getType();
-                received = gson.fromJson(json, receiveType);
+                received = SocketHandler.<T>parseJson(reader.readLine());
             } catch (Exception e) {
                 e.printStackTrace();
                 dispatcher.remove(sock);

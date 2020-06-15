@@ -14,6 +14,7 @@ import lan_editor.datastore.dataClasses.Document;
 import lan_editor.datastore.dataClasses.TextBlock;
 import lan_editor.gui.widgets.ExpandingTextArea;
 import lan_editor.networking.Networker;
+import lan_editor.networking.actions.ChangeBlockAction;
 import lan_editor.networking.actions.DocumentAction;
 
 import java.util.function.Consumer;
@@ -162,6 +163,15 @@ public class MainGuiController {
                     prevText.getNode().requestFocus();
                 }
             }
+        }
+
+        if (selected instanceof ExpandingTextArea) {
+            var textArea = (ExpandingTextArea) selected;
+            networker.send(new ChangeBlockAction(
+                    0, "",
+                    document.getBlocks().indexOf(textArea.getTextBlock()),
+                    textArea.getText()
+            ));
         }
     }
 }

@@ -4,9 +4,12 @@ lan_editor/datastore/dataClasses/TextBlock.class
 lan_editor/networking/Networker.class
 lan_editor/datastore/dataClasses/BlockListCell.class
 lan_editor/datastore/dataClasses/Block.class
+lan_editor/networking/SocketHandler$1.class
+tests/NetworkingTests.class
 lan_editor/datastore/Datastore.class
-lan_editor/networking/actions/ChangeBlockAction.class
 lan_editor/gui/MainGuiController.class
+lan_editor/networking/actions/ChangeBlockAction.class
+lan_editor/networking/SocketHandler$2.class
 lan_editor/networking/SocketHandler.class
 lan_editor/datastore/dataClasses/Document.class
 lan_editor/networking/actions/GlobalAction.class
