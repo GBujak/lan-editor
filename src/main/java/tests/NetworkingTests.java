@@ -1,15 +1,23 @@
 package tests;
 
+import com.google.gson.reflect.TypeToken;
 import lan_editor.networking.Networker;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.TreeMap;
+
+class testClass implements Serializable {
+    public int x;
+    public String str;
+}
 
 public class NetworkingTests {
     public static void main(String[] args) throws Exception {
         var server = Networker.<String>makeServer(
                 8080,
-                str -> System.out.println("serwer: " + str)
+                str -> System.out.println("serwer: " + str),
+                new TypeToken<String>(){}
         );
 
         var serverThread = new Thread(server);
@@ -22,7 +30,8 @@ public class NetworkingTests {
             var klient = Networker.<String>makeClient(
                     "127.0.0.1",
                     8080,
-                    str -> System.out.println("klient " + index +": " + str)
+                    str -> System.out.println("klient " + index +": " + str),
+                    new TypeToken<String>(){}
             );
             list.add(klient);
             var thread = new Thread(klient);
@@ -39,7 +48,8 @@ public class NetworkingTests {
 
         var newClient = Networker.makeClient(
                 "localhost", 8080,
-                str -> System.out.println("nowy klient: " + str)
+                str -> System.out.println("nowy klient: " + str),
+                new TypeToken<String>(){}
         );
         var newThread = new Thread(newClient);
         newThread.setDaemon(true);
@@ -103,5 +113,24 @@ public class NetworkingTests {
 //        nowy klient: Hello
 //        nowy klient: Hello2
 //        nowy klient: Hello3
+
+        var classServer = Networker.<testClass>makeServer(8888, x -> {}, new TypeToken<testClass>(){});
+        var classServerThread = new Thread(classServer);
+        classServerThread.setDaemon(true);
+        classServerThread.start();
+
+        var classClient = Networker.<testClass>makeClient("localhost", 8888,
+                x -> System.out.println(x.x + " " + x.str),
+                new TypeToken<testClass>(){});
+        var classClientThread = new Thread(classClient);
+        classClientThread.setDaemon(true);
+        classClientThread.start();
+
+        var test = new testClass();
+        test.x = 100;
+        test.str = "test string";
+        classServer.send(test);
+
+        Thread.sleep(1 * 1000);
     }
 }

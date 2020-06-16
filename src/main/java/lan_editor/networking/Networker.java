@@ -1,5 +1,6 @@
 package lan_editor.networking;
 
+import com.google.gson.reflect.TypeToken;
 import com.sun.tools.javac.Main;
 import lan_editor.gui.MainGuiController;
 
@@ -25,7 +26,9 @@ public class Networker<T extends Serializable> implements Runnable {
 
     private Consumer<T> consumer;
 
-    public Networker(boolean isServer, String address, int port, Consumer<T> onReceive) {
+    private TypeToken<T> typeToken;
+
+    public Networker(boolean isServer, String address, int port, Consumer<T> onReceive, TypeToken<T> typeToken) {
         if (address == null && !isServer)
             throw new IllegalArgumentException("adres nie moze byc null dla klienta");
         this.address = address;
@@ -33,14 +36,15 @@ public class Networker<T extends Serializable> implements Runnable {
         this.iAmServer = isServer;
         this.consumer = onReceive;
         this.dispatcher = new Dispatcher<T>();
+        this.typeToken = typeToken;
     }
 
-    public static <T extends Serializable> Networker<T> makeServer(int port, Consumer<T> onReceive) {
-        return new Networker<T>(true, null, port, onReceive);
+    public static <T extends Serializable> Networker<T> makeServer(int port, Consumer<T> onReceive, TypeToken<T> responseTypeToken) {
+        return new Networker<T>(true, null, port, onReceive, responseTypeToken);
     }
 
-    public static <T extends Serializable> Networker<T> makeClient(String address, int port, Consumer<T> onReceive) {
-        return new Networker<T>(false, address, port, onReceive);
+    public static <T extends Serializable> Networker<T> makeClient(String address, int port, Consumer<T> onReceive, TypeToken<T> responseTypeToken) {
+        return new Networker<T>(false, address, port, onReceive, responseTypeToken);
     }
 
     ServerSocket sock;
@@ -63,7 +67,7 @@ public class Networker<T extends Serializable> implements Runnable {
                 var newClient = sock.accept();
                 System.out.println("accepted: " + newClient.getInetAddress().getHostName());
                 dispatcher.addSocket(newClient);
-                var thread = new Thread(new SocketHandler<T>(consumer, dispatcher, newClient));
+                var thread = new Thread(new SocketHandler<T>(consumer, dispatcher, newClient, typeToken));
                 thread.setDaemon(true);
                 thread.start();
             } catch (IOException e) {e.printStackTrace();}
@@ -82,7 +86,7 @@ public class Networker<T extends Serializable> implements Runnable {
             return; // trzeba, bo inaczej ostrzega że zmienna sock może być niezainicjalizowana
         }
         dispatcher.addSocket(sock);
-        var handlerThread = new Thread(new SocketHandler<T>(consumer, dispatcher, sock));
+        var handlerThread = new Thread(new SocketHandler<T>(consumer, dispatcher, sock, typeToken));
         handlerThread.setDaemon(true);
         handlerThread.start();
     }

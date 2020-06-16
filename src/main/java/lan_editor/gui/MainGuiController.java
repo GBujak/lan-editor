@@ -1,5 +1,6 @@
 package lan_editor.gui;
 
+import com.google.gson.reflect.TypeToken;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -89,7 +90,8 @@ public class MainGuiController {
 
         this.networker = Networker.makeClient(
                 url, port,
-                consumer
+                consumer,
+                new TypeToken<DocumentAction>(){}
         );
 
         var thread = new Thread(this.networker);
@@ -111,7 +113,8 @@ public class MainGuiController {
 
         this.networker = Networker.makeServer(
                 port,
-                consumer
+                consumer,
+                new TypeToken<DocumentAction>(){}
         );
 
         var thread = new Thread(this.networker);
