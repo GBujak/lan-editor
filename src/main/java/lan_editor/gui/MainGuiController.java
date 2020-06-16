@@ -15,9 +15,8 @@ import lan_editor.datastore.dataClasses.Document;
 import lan_editor.datastore.dataClasses.TextBlock;
 import lan_editor.gui.widgets.ExpandingTextArea;
 import lan_editor.networking.Networker;
-import lan_editor.networking.actions.Action;
-import lan_editor.networking.actions.ChangeBlockAction;
-import lan_editor.networking.actions.DocumentAction;
+import lan_editor.networking.actions.*;
+import org.w3c.dom.Text;
 
 import java.util.function.Consumer;
 
@@ -140,12 +139,17 @@ public class MainGuiController {
                 var caret = selTextArea.getCaretPosition();
                 var newBlock = new TextBlock(selTextArea.getText().substring(caret));
                 selTextArea.setText(selTextArea.getText(0, caret));
+                var index = document.getBlocks().indexOf(selTextArea.getTextBlock());
                 document.getBlocks().add(
-                        document.getBlocks().indexOf(selTextArea.getTextBlock()) + 1,
+                        index + 1,
                         newBlock
                 );
                 newBlock.getNode().requestFocus();
                 ev.consume();
+
+
+                networker.send(new Action(new ChangeBlockAction("", index, selTextArea.getText())));
+                networker.send(new Action(new AddBlockAction("", index + 1, newBlock.getContent().getText())));
             }
         }
 
@@ -170,6 +174,13 @@ public class MainGuiController {
                     document.getBlocks().remove(index);
                     prevText.getNode().positionCaret(newCaret);
                     prevText.getNode().requestFocus();
+                }
+
+                networker.send(new Action(new RemoveBlockAction("", index - 1)));
+                if (prevBlock instanceof TextBlock) {
+                    networker.send(new Action(new ChangeBlockAction(
+                            "", index - 1, ((TextBlock) prevBlock).getContent().getText()
+                    )));
                 }
             }
         }

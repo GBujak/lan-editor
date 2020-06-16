@@ -47,7 +47,8 @@ public class SocketHandler<T extends Serializable> implements Runnable {
                 return;
             }
 
-            consumer.accept(received);
+            // uruchom na wątku interfejsu graficznego
+            Platform.runLater(() -> consumer.accept(received));
         }
         dispatcher.remove(sock);
     }
