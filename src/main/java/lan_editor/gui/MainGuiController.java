@@ -15,6 +15,7 @@ import lan_editor.datastore.dataClasses.Document;
 import lan_editor.datastore.dataClasses.TextBlock;
 import lan_editor.gui.widgets.ExpandingTextArea;
 import lan_editor.networking.Networker;
+import lan_editor.networking.actions.Action;
 import lan_editor.networking.actions.ChangeBlockAction;
 import lan_editor.networking.actions.DocumentAction;
 
@@ -25,7 +26,7 @@ import java.util.function.Consumer;
  */
 
 public class MainGuiController {
-    private Networker<DocumentAction> networker;
+    private Networker<Action> networker;
 
     private Datastore datastore = new Datastore();
 
@@ -74,8 +75,8 @@ public class MainGuiController {
         this.setDocument(doc);
     }
 
-    private Consumer<DocumentAction> consumer = action -> {
-        action.commit(this.getDocument());
+    private Consumer<Action> consumer = action -> {
+        action.getDocumentAction().commit(this.getDocument());
     };
 
     private void handleJoin(ActionEvent ev) {
@@ -91,7 +92,7 @@ public class MainGuiController {
         this.networker = Networker.makeClient(
                 url, port,
                 consumer,
-                new TypeToken<DocumentAction>(){}
+                new TypeToken<Action>(){}
         );
 
         var thread = new Thread(this.networker);
@@ -113,8 +114,11 @@ public class MainGuiController {
 
         this.networker = Networker.makeServer(
                 port,
-                consumer,
-                new TypeToken<DocumentAction>(){}
+                action -> { // Jeśli jesteś serwerem, roześlij otrzymaną akcję
+                    this.consumer.accept(action);
+                    this.networker.send(action);
+                },
+                new TypeToken<Action>(){}
         );
 
         var thread = new Thread(this.networker);
@@ -170,11 +174,12 @@ public class MainGuiController {
 
         if (selected instanceof ExpandingTextArea) {
             var textArea = (ExpandingTextArea) selected;
-            networker.send(new ChangeBlockAction(
-                    0, "",
-                    document.getBlocks().indexOf(textArea.getTextBlock()),
-                    textArea.getText()
-            ));
+            networker.send(new Action(
+                    new ChangeBlockAction(
+                        "",
+                        document.getBlocks().indexOf(textArea.getTextBlock()),
+                        textArea.getText()
+                )));
         }
     }
 }
