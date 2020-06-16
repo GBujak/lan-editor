@@ -77,6 +77,8 @@ public class MainGuiController {
 
     private Consumer<Action> consumer = action -> {
         action.getDocumentAction().commit(this.getDocument());
+        var node = this.getDocument().getBlocks().get(action.getBlockIndex()).getNode();
+        if (node instanceof ExpandingTextArea) ((ExpandingTextArea) node).fitToText();
     };
 
     private void handleJoin(ActionEvent ev) {
@@ -179,7 +181,7 @@ public class MainGuiController {
                         "",
                         document.getBlocks().indexOf(textArea.getTextBlock()),
                         textArea.getText()
-                )));
+            )));
         }
     }
 }

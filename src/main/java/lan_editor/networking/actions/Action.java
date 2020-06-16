@@ -63,4 +63,8 @@ public class Action implements Serializable {
                 throw new IllegalStateException("nieustawione documentActionType");
         }
     }
+
+    public int getBlockIndex() {
+        return blockIndex;
+    }
 }
