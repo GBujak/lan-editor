@@ -147,9 +147,12 @@ public class MainGuiController {
                 newBlock.getNode().requestFocus();
                 ev.consume();
 
-
-                networker.send(new Action(new ChangeBlockAction("", index, selTextArea.getText())));
-                networker.send(new Action(new AddBlockAction("", index + 1, newBlock.getContent().getText())));
+                if (this.networker != null) {
+                    networker.send(new Action(new ChangeBlockAction("", index, selTextArea.getText())));
+                    networker.send(new Action(new AddBlockAction(
+                            "", index + 1, newBlock.getContent().getText()
+                    )));
+                }
             }
         }
 
@@ -176,16 +179,18 @@ public class MainGuiController {
                     prevText.getNode().requestFocus();
                 }
 
-                networker.send(new Action(new RemoveBlockAction("", index - 1)));
-                if (prevBlock instanceof TextBlock) {
-                    networker.send(new Action(new ChangeBlockAction(
-                            "", index - 1, ((TextBlock) prevBlock).getContent().getText()
-                    )));
+                if (this.networker != null) {
+                    networker.send(new Action(new RemoveBlockAction("", index - 1)));
+                    if (prevBlock instanceof TextBlock) {
+                        networker.send(new Action(new ChangeBlockAction(
+                                "", index - 1, ((TextBlock) prevBlock).getContent().getText()
+                        )));
+                    }
                 }
             }
         }
 
-        if (selected instanceof ExpandingTextArea) {
+        if (selected instanceof ExpandingTextArea && this.networker != null) {
             var textArea = (ExpandingTextArea) selected;
             networker.send(new Action(
                     new ChangeBlockAction(
