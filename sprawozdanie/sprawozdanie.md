@@ -10,9 +10,10 @@ pagesize: a4
 geometry: margin=2.5cm
 toc: t
 mainfont: Lato
-boldfont: Ubuntu
 monofont: Inconsolata
 ---
+
+\newpage
 
 # Założenia projektu
 
@@ -20,6 +21,17 @@ Nasz projekt polegał na napisaniu edytora tekstu w języku Java z wykorzystanie
 biblioteki JavaFX. Edytor ma funkcję pisania tego samego dokumentu przez wiele
 osób w tym samym czasie. Podczas pisania, synchronizuje dokument pomiędzy
 użytkownikami.
+
+Edytor tekstu traktuje dokument jako listę paragrafów (bloków tekstu). Gdy
+użytkownik wciśnie klawisz enter, tworzony jest nowy blok pod obecnie
+edytowanym. Dzięki takiemu rozwiązaniu możemy używać widżetu `ListView` z JavaFX
+do wyświetlania dokumentów.
+
+Widżet ten pozwala na rysowanie na ekranie tylko tylu pól tekstowych, ile jest w
+tej chwili widoczne. Jedno duże pole tekstowe na cały dokument mogłoby powodować
+problemy z płynnym przewijaniem strony przy ogromnych dokumentach.
+
+![interfejs aplikacji](img/interfejs.png){width=60%}
 
 Moduł sieciowy edytora używa topologii klient-serwer, ale serwer nie jest
 aplikacją terminalową. Interfejs graficzny zapewnia możliwość dołączenia do
@@ -33,7 +45,11 @@ Moduł sieciowy naszego projektu składa się z klas:
 
     Jedna instancja dla serwera i klienta. Jeśli program działa w trybie
     serwera, tworzy instancję `ServerSocket`, która ciągle akceptuje nowych
-    klientów. W trybie klienta, tworzy `Dispatcher<T>`, który będzie wysyłał
+    klientów. Dla każdego klienta tworzy nową instancję `SocketHandler<T>`,
+    która będzie odbierała wiadomości. `Dispatcher<T>` dostaje każdego
+    podłączonego klienta.
+    
+    W trybie klienta, tworzy `Dispatcher<T>`, który będzie wysyłał
     wiadomości tylko do serwera oraz `SocketHandler<T>`, który będzie odbierał
     wiadomości od serwera.
 
@@ -44,14 +60,16 @@ Moduł sieciowy naszego projektu składa się z klas:
     Przechowuje listę wszystkich wiadomości (obiekty klasy `T`) oraz
     `HashMap<Socket, Integer>`, który przechowuje sockety, do których ma wysyłać
     wiadomości oraz `Integer` będący ID ostatniej wiadomości wysłanej do
-    socketa.
+    socketa. Z mapy korzysta metoda `void dispatch()`, która sprawdza ilość
+    wiadomości i iteruje po socketach wysyłając im po kolei wszystkie
+    wiadomości, których nie dostali.
     
     Zapewnia medotę `void addAndDispatch(T)`, która dodaje wiadomość typu `T` do
     listy wiadomości i wysyła tą wiadomość do wszystkich socketów.
 
     Ma też metodę `void addSocket(Socket)`, która dodaje Socket do mapy i
     wywołuje metodę `dispatch()`, która wyśle temu socketowi wszystkie
-    wiadomości dodane do Dispatchera od początky działania programu.
+    wiadomości dodane do Dispatchera od początku działania programu.
 
 - `SocketHandler<T extends Serializable>`
 
@@ -60,8 +78,7 @@ Moduł sieciowy naszego projektu składa się z klas:
     Obiekt w nieskończoność odbiera nadchodzące wiadomości i wywołuje domknięcie
     z każdą wiadomością.
 
-**Wszystkie klasy powinny działać na własnych wątkach. Nie zapewniają możliwości
-zamknięcia, więc wątki powinny być ustawione jako Daemony.**
+**Wszystkie klasy powinny działać na własnych wątkach.**
 
 # Edytor tekstu
 
@@ -121,7 +138,8 @@ Podczas pisania, edytor generuje wiadomości. Są do obiekty klasy
 
 Nie jest możliwe przeniesienie tekstu do następnego bloku, dlatego żadna akcja
 nie generuje wiadomości `ChangeBlockAction` dla bloku znajdującego się pod
-aktywnym.
+aktywnym (`AddBlockAction` przewiduje to, że nowo stworzony blok będzie miał
+jakąś początkową zawartość).
 
 # Reprezentacja dokumentu
 
@@ -161,3 +179,7 @@ stworzyliśmy serializowalne odpowiedniki do przechowywania w obiekcie
     Klasa nieabstrakcyjna reprezenująca blok tekstu. Zawarta w całości w
     obiekcie `ChangeBlockAction`.
 
+# Wnioski
+
+Wykonując projekt, utrwaliliśmy wiedzę na temat programowania obiektowego oraz
+przećwiczyliśmy pracę w grupie z wykorzystaniem programu Git. 
