@@ -9,8 +9,7 @@ public class ChangeBlockAction extends DocumentAction {
     int blockIndex;
     String blockContent;
 
-    public ChangeBlockAction(
-            int actionId, String docName, int blockIndex, String blockContent) {
+    public ChangeBlockAction(String docName, int blockIndex, String blockContent) {
         super(docName);
         this.blockIndex = blockIndex;
         this.blockContent = blockContent;

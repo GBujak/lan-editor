@@ -6,9 +6,9 @@ import lan_editor.datastore.dataClasses.serializable.SerializableBlock;
 import java.util.List;
 
 public class RemoveBlockAction extends DocumentAction {
-    private int blockIndex;
+    int blockIndex;
 
-    public RemoveBlockAction(int actionId, String docName, int blockIndex) {
+    public RemoveBlockAction(String docName, int blockIndex) {
         super(docName);
         this.blockIndex = blockIndex;
     }
