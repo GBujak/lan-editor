@@ -11,6 +11,7 @@ geometry: margin=2.5cm
 toc: t
 mainfont: Lato
 monofont: Inconsolata
+monofontoptions: 'Scale=0.9'
 ---
 
 \newpage
@@ -78,6 +79,218 @@ Moduł sieciowy naszego projektu składa się z klas:
     Obiekt w nieskończoność odbiera nadchodzące wiadomości i wywołuje domknięcie
     z każdą wiadomością.
 
+## `Networker<T extends Serializable>`
+
+```java
+
+package lan_editor.networking;
+
+// import ...
+
+/**
+ * Klasa zajmująca się komunikacją sieciową z serwerem i innymi klientami
+ */
+
+public class Networker<T extends Serializable> implements Runnable {
+    private Dispatcher<T> dispatcher;
+    private boolean iAmServer;
+
+    private int port;
+    private String address;
+
+    private Consumer<T> consumer;
+
+    private TypeToken<T> typeToken;
+
+    public Networker(
+            boolean isServer, String address, int port,
+            Consumer<T> onReceive, TypeToken<T> typeToken) {
+        if (address == null && !isServer)
+            throw new IllegalArgumentException("adres nie moze byc null dla klienta");
+        this.address = address;
+        this.port = port;
+        this.iAmServer = isServer;
+        this.consumer = onReceive;
+        this.dispatcher = new Dispatcher<T>();
+        this.typeToken = typeToken;
+    }
+
+    public static <T extends Serializable> Networker<T> makeServer(
+        int port, Consumer<T> onReceive, TypeToken<T> responseTypeToken) {
+        return new Networker<T>(true, null, port, onReceive, responseTypeToken);
+    }
+
+    public static <T extends Serializable> Networker<T> makeClient(
+        String address, int port, Consumer<T> onReceive, TypeToken<T> responseTypeToken) {
+        return new Networker<T>(false, address, port, onReceive, responseTypeToken);
+    }
+
+    ServerSocket sock;
+    @Override
+    public void run() {
+        if (iAmServer)
+            server();
+        else client();
+    }
+
+    private void server() {
+        try {
+            sock = new ServerSocket(port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        while (true) {
+            try {
+                var newClient = sock.accept();
+                System.out.println("accepted: " + newClient.getInetAddress().getHostName());
+                dispatcher.addSocket(newClient);
+                var thread = new Thread(new SocketHandler<T>(
+                    consumer, dispatcher, newClient, typeToken));
+                thread.setDaemon(true);
+                thread.start();
+            } catch (IOException e) {e.printStackTrace();}
+        }
+    }
+
+    private void client() {
+        dispatcher = new Dispatcher<T>();
+        Socket sock;
+        try {
+            sock = new Socket();
+            sock.connect(new InetSocketAddress(address, port));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        }
+        dispatcher.addSocket(sock);
+        var handlerThread = new Thread(new SocketHandler<T>(
+            consumer, dispatcher, sock, typeToken));
+        handlerThread.setDaemon(true);
+        handlerThread.start();
+    }
+
+    public synchronized void send(T item) {
+        dispatcher.addAndDispatch(item);
+    }
+}
+
+```
+
+## `Dispatcher<T extends Serializable>`
+
+```java
+
+package lan_editor.networking;
+
+// import ...
+
+/**
+ * Dispatcher rozsyła T do socketów, które przechowuje
+ * wszystkie metody są synchronizowane
+ *
+ * @param <T> to rozsyłany obiekt implementujący Serializable
+ */
+public class Dispatcher<T extends Serializable> {
+    ArrayList<T> items = new ArrayList<>();
+
+    /// Przechowuje socket oraz id ostatniego itemu, który został wysłany do tego socketa
+    HashMap<Socket, Integer> sockets = new HashMap<>();
+
+    public synchronized void addSocket(Socket sock) {
+        System.out.println("added sock: " + sock.getInetAddress().getHostName());
+        sockets.put(sock, 0);
+        dispatch();
+    }
+
+    public synchronized void remove(Socket sock) {
+        sockets.remove(sock);
+    }
+
+    public synchronized void addAndDispatch(T item) {
+        items.add(item);
+        dispatch();
+    }
+
+    public synchronized void dispatch() {
+        for (var entry : sockets.entrySet()) {
+            int lastClientAction = entry.getValue();
+            Socket clientSocket  = entry.getKey();
+            if (items.size() > lastClientAction) {
+                for (int i = lastClientAction; i < items.size(); i++) {
+                    var item = items.get(i);
+                    try {
+                        var writer = new PrintWriter(clientSocket.getOutputStream(), true);
+                        var gson = new Gson();
+                        var json = gson.toJson(item);
+                        System.out.println("sending " + json + " to " 
+                            + clientSocket.getInetAddress().getHostName());
+                        writer.println(json);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                entry.setValue(items.size());
+            }
+        }
+    }
+}
+
+```
+
+## `SocketHandler<T extends Serializable>`
+
+```java
+
+package lan_editor.networking;
+
+// import ...
+
+public class SocketHandler<T extends Serializable> implements Runnable {
+    private BufferedReader reader;
+    private Socket sock;
+
+    private Consumer<T> consumer;
+    private Dispatcher<T> dispatcher;
+
+    private TypeToken<T> typeToken;
+
+    public SocketHandler(
+            Consumer<T> onReceive, Dispatcher<T> dispatcher,
+            Socket sock, TypeToken<T> typeToken) {
+        this.typeToken = typeToken;
+        this.consumer = onReceive;
+        this.sock = sock;
+        this.dispatcher = dispatcher;
+        try {
+            reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+        } catch (IOException e) {e.printStackTrace();}
+    }
+
+    @Override
+    public void run() {
+        while (!sock.isClosed()) {
+            T received;
+
+            try {
+                received = new Gson().fromJson(
+                    reader.readLine(), typeToken.getType());
+            } catch (Exception e) {
+                e.printStackTrace();
+                dispatcher.remove(sock);
+                return;
+            }
+
+            // uruchom na wątku interfejsu graficznego
+            Platform.runLater(() -> consumer.accept(received));
+        }
+        dispatcher.remove(sock);
+    }
+}
+
+```
+
 **Wszystkie klasy powinny działać na własnych wątkach.**
 
 # Edytor tekstu
@@ -95,6 +308,278 @@ wszystko co znajdowało się za kursorem w polu tekstowym.
 Wciśnięcie backspace, gdy kursor znajduje się na początku pola tekstowego
 powoduje skasowanie tego pola tekstowego i skopiowanie jego zawartości za
 kursorem do poprzedniego pola tekstowego.
+
+## `ExpandingTextArea`
+
+```java
+package lan_editor.gui.widgets;
+
+// import ...
+
+public class ExpandingTextArea extends TextArea {
+    private TextBlock textBlock;
+    private Text content;
+    private double currentHeight = getFont().getSize() + 20;
+
+    public TextBlock getTextBlock() {
+        return textBlock;
+    }
+
+    public ExpandingTextArea(TextBlock textBlock) {
+        super();
+        wrapTextProperty().setValue(true);
+        setManaged(true);
+        setPrefWidth(500);
+
+        this.textBlock = textBlock;
+        this.content = this.textBlock.getContent();
+        this.textProperty().bindBidirectional(this.content.textProperty());
+
+        detectFontChange();
+        fitToText();
+
+        this.setOnKeyPressed(keyEvent -> {
+            detectFontChange();
+            fitToText();
+        });
+    }
+
+    public void fitToText() {
+        if (currentHeight < 50) currentHeight = 50;
+        Text tx = (Text) this.lookup(".text");
+        if (tx != null) {
+            currentHeight = Math.max(
+                    getFont().getSize() + 20,
+                    tx.getBoundsInLocal().getHeight() + 20);
+        }
+        setPrefHeight(currentHeight);
+    }
+
+    private void detectFontChange() {
+        if (content.getText().startsWith("# "))
+            this.setFont(TextTypes.header1);
+        else if (content.getText().startsWith("## "))
+            this.setFont(TextTypes.header2);
+        else if (content.getText().startsWith("### "))
+            this.setFont(TextTypes.header3);
+        else if (this.getFont() != TextTypes.defaultFont)
+            this.setFont(TextTypes.defaultFont);
+        else if (this.getText().startsWith("```"))
+            this.setFont(TextTypes.monoFont);
+    }
+}
+
+```
+
+## Formatowanie tekstu
+
+Edytor zapewnia formatowanie tekstu podobne jak w formacie markdown. Gdy blok
+tekstu zaczyna się od specjalnego ciągu znaków, zmieniana jest czcionka całego
+bloku. 
+
+``` java
+package lan_editor.gui.constants;
+
+import javafx.scene.text.Font;
+
+public class TextTypes {
+    public static final Font header1 =
+            new Font(24); // #
+    public static final Font header2 =
+            new Font(22); // ##
+    public static final Font header3 =
+            new Font(20); // ###
+    public static final Font defaultFont =
+            new Font(16); // ```
+    public static final Font monoFont =
+            new Font("monospace", 16);
+}
+```
+
+## `MainGuiController`
+
+```java
+package lan_editor.gui;
+
+// import ...
+
+/**
+ * Kontroler głównego okna
+ */
+
+public class MainGuiController {
+    private Networker<Action> networker;
+
+    private Datastore datastore = new Datastore();
+
+    private Document document = null;
+
+    public void setDocument(Document doc) {
+        document = doc;
+        mainListView.setItems(document.getBlocks());
+    }
+    public Document getDocument() {
+        return document;
+    }
+
+    @FXML
+    private TreeView<?> mainTreeView;
+    @FXML
+    private ListView<Block> mainListView;
+    @FXML
+    private ToolBar mainToolBar;
+    @FXML
+    private Button joinButton;
+    @FXML
+    private Button hostButton;
+    @FXML
+    private TextField addressField;
+    @FXML
+    private TextField portField;
+
+    @FXML
+    public void initialize() {
+        mainListView.setCellFactory(
+                blockListView -> new BlockListCell());
+        mainListView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
+
+        joinButton.setOnAction(this::handleJoin);
+        hostButton.setOnAction(this::handleHost);
+
+        var doc = new Document();
+        doc.getBlocks().add(new TextBlock(""));
+        this.setDocument(doc);
+    }
+
+    private Consumer<Action> consumer = action -> {
+        action.getDocumentAction().commit(this.getDocument());
+        var node = this.getDocument().getBlocks().get(action.getBlockIndex()).getNode();
+        if (node instanceof ExpandingTextArea) ((ExpandingTextArea) node).fitToText();
+    };
+
+    private void handleJoin(ActionEvent ev) {
+        var url = addressField.getText();
+        int port = 0;
+        try {
+            port = Integer.parseInt(portField.getText());
+        } catch (NumberFormatException e) {
+            portField.setText("");
+            return;
+        }
+
+        this.networker = Networker.makeClient(
+                url, port,
+                consumer,
+                new TypeToken<Action>(){}
+        );
+
+        var thread = new Thread(this.networker);
+        thread.setDaemon(true);
+        thread.start();
+
+        portField.setDisable(true);
+        addressField.setDisable(true);
+    }
+
+    private void handleHost(ActionEvent ev) {
+        int port = 0;
+        try {
+            port = Integer.parseInt(portField.getText());
+        } catch (NumberFormatException e) {
+            portField.setText("");
+            return;
+        }
+
+        this.networker = Networker.makeServer(
+                port,
+                action -> { // Jeśli jesteś serwerem, roześlij otrzymaną akcję
+                    this.consumer.accept(action);
+                    this.networker.send(action);
+                },
+                new TypeToken<Action>(){}
+        );
+
+        var thread = new Thread(this.networker);
+        thread.setDaemon(true);
+        thread.start();
+
+        portField.setDisable(true);
+        addressField.setDisable(true);
+    }
+
+    private void handleKeyEvent(KeyEvent ev) {
+        // Enter tworzy nowe pole
+        var selected = mainListView.getScene().getFocusOwner();
+        if (ev.getCode() == KeyCode.ENTER) {
+            if (selected instanceof ExpandingTextArea && !ev.isShiftDown()) {
+                var selTextArea = (ExpandingTextArea) selected;
+                var caret = selTextArea.getCaretPosition();
+                var newBlock = new TextBlock(selTextArea.getText().substring(caret));
+                selTextArea.setText(selTextArea.getText(0, caret));
+                var index = document.getBlocks().indexOf(selTextArea.getTextBlock());
+                document.getBlocks().add(
+                        index + 1,
+                        newBlock
+                );
+                newBlock.getNode().requestFocus();
+                ev.consume();
+
+                if (this.networker != null) {
+                    networker.send(new Action(
+                        new ChangeBlockAction("", index, selTextArea.getText())));
+                    networker.send(new Action(new AddBlockAction(
+                            "", index + 1, newBlock.getContent().getText()
+                    )));
+                }
+            }
+        }
+
+        // Backspace usuwa puste pole
+        if (ev.getCode() == KeyCode.BACK_SPACE) {
+            if (selected instanceof ExpandingTextArea && !ev.isShiftDown()) {
+                var selTextArea = (ExpandingTextArea) selected;
+                var caretPos = selTextArea.getCaretPosition();
+                if (caretPos != 0) return;
+
+                var remainingText = selTextArea.getText();
+                var index = document.getBlocks().indexOf(selTextArea.getTextBlock());
+                if (index == 0) return;
+
+                var prevBlock = document.getBlocks().get(index - 1);
+                if (prevBlock instanceof TextBlock) {
+                    var prevText = (TextBlock) prevBlock;
+                    var newCaret = prevText.getContent().getText().length();
+                    prevText.getContent().setText(
+                            prevText.getContent().getText().concat(remainingText)
+                    );
+                    document.getBlocks().remove(index);
+                    prevText.getNode().positionCaret(newCaret);
+                    prevText.getNode().requestFocus();
+                }
+
+                if (this.networker != null) {
+                    networker.send(new Action(new RemoveBlockAction("", index - 1)));
+                    if (prevBlock instanceof TextBlock) {
+                        networker.send(new Action(new ChangeBlockAction(
+                                "", index - 1, ((TextBlock) prevBlock).getContent().getText()
+                        )));
+                    }
+                }
+            }
+        }
+
+        if (selected instanceof ExpandingTextArea && this.networker != null) {
+            var textArea = (ExpandingTextArea) selected;
+            networker.send(new Action(
+                    new ChangeBlockAction(
+                        "",
+                        document.getBlocks().indexOf(textArea.getTextBlock()),
+                        textArea.getText()
+            )));
+        }
+    }
+}
+```
 
 # Rozsyłane wiadomości
 

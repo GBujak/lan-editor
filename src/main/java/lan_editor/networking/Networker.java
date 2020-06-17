@@ -28,7 +28,9 @@ public class Networker<T extends Serializable> implements Runnable {
 
     private TypeToken<T> typeToken;
 
-    public Networker(boolean isServer, String address, int port, Consumer<T> onReceive, TypeToken<T> typeToken) {
+    public Networker(
+            boolean isServer, String address, int port,
+            Consumer<T> onReceive, TypeToken<T> typeToken) {
         if (address == null && !isServer)
             throw new IllegalArgumentException("adres nie moze byc null dla klienta");
         this.address = address;
@@ -39,11 +41,13 @@ public class Networker<T extends Serializable> implements Runnable {
         this.typeToken = typeToken;
     }
 
-    public static <T extends Serializable> Networker<T> makeServer(int port, Consumer<T> onReceive, TypeToken<T> responseTypeToken) {
+    public static <T extends Serializable> Networker<T> makeServer(
+        int port, Consumer<T> onReceive, TypeToken<T> responseTypeToken) {
         return new Networker<T>(true, null, port, onReceive, responseTypeToken);
     }
 
-    public static <T extends Serializable> Networker<T> makeClient(String address, int port, Consumer<T> onReceive, TypeToken<T> responseTypeToken) {
+    public static <T extends Serializable> Networker<T> makeClient(
+        String address, int port, Consumer<T> onReceive, TypeToken<T> responseTypeToken) {
         return new Networker<T>(false, address, port, onReceive, responseTypeToken);
     }
 
@@ -67,7 +71,8 @@ public class Networker<T extends Serializable> implements Runnable {
                 var newClient = sock.accept();
                 System.out.println("accepted: " + newClient.getInetAddress().getHostName());
                 dispatcher.addSocket(newClient);
-                var thread = new Thread(new SocketHandler<T>(consumer, dispatcher, newClient, typeToken));
+                var thread = new Thread(new SocketHandler<T>(
+                    consumer, dispatcher, newClient, typeToken));
                 thread.setDaemon(true);
                 thread.start();
             } catch (IOException e) {e.printStackTrace();}
@@ -83,10 +88,11 @@ public class Networker<T extends Serializable> implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
-            return; // trzeba, bo inaczej ostrzega że zmienna sock może być niezainicjalizowana
+            return;
         }
         dispatcher.addSocket(sock);
-        var handlerThread = new Thread(new SocketHandler<T>(consumer, dispatcher, sock, typeToken));
+        var handlerThread = new Thread(new SocketHandler<T>(
+            consumer, dispatcher, sock, typeToken));
         handlerThread.setDaemon(true);
         handlerThread.start();
     }

@@ -50,7 +50,8 @@ public class Dispatcher<T extends Serializable> {
                         var writer = new PrintWriter(clientSocket.getOutputStream(), true);
                         var gson = new Gson();
                         var json = gson.toJson(item);
-                        System.out.println("sending " + json + " to " + clientSocket.getInetAddress().getHostName());
+                        System.out.println("sending " + json + " to " 
+                            + clientSocket.getInetAddress().getHostName());
                         writer.println(json);
                     } catch (IOException e) {
                         e.printStackTrace();

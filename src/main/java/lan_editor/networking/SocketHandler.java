@@ -24,7 +24,9 @@ public class SocketHandler<T extends Serializable> implements Runnable {
 
     private TypeToken<T> typeToken;
 
-    public SocketHandler(Consumer<T> onReceive, Dispatcher<T> dispatcher, Socket sock, TypeToken<T> typeToken) {
+    public SocketHandler(
+            Consumer<T> onReceive, Dispatcher<T> dispatcher,
+            Socket sock, TypeToken<T> typeToken) {
         this.typeToken = typeToken;
         this.consumer = onReceive;
         this.sock = sock;
@@ -40,7 +42,8 @@ public class SocketHandler<T extends Serializable> implements Runnable {
             T received;
 
             try {
-                received = new Gson().fromJson(reader.readLine(), typeToken.getType());
+                received = new Gson().fromJson(
+                    reader.readLine(), typeToken.getType());
             } catch (Exception e) {
                 e.printStackTrace();
                 dispatcher.remove(sock);
