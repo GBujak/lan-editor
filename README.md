@@ -1,6 +1,7 @@
 # lan-editor
-
-![interfejs aplikacji](sprawozdanie/img/interfejs.png)
+<div style="margin: auto; width: 70%;">
+  ![interfejs aplikacji](sprawozdanie/img/interfejs.png)
+</div>
 
 ## Sprawozdanie
 
