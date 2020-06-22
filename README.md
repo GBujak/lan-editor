@@ -1,7 +1,8 @@
 # lan-editor
-<div style="margin: auto; width: 70%;">
+
+<p align="center">
   <img src="sprawozdanie/img/interfejs.png">
-</div>
+</p>
 
 ## Sprawozdanie
 
