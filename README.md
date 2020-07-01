@@ -1,6 +1,8 @@
 # lan-editor
 
-![interfejs aplikacji](sprawozdanie/img/interfejs.png)
+<p align="center">
+  <img src="sprawozdanie/img/interfejs.png">
+</p>
 
 ## Sprawozdanie
 
