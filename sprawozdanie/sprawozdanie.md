@@ -9,8 +9,8 @@ lang: pl
 pagesize: a4
 geometry: margin=2.5cm
 toc: t
-mainfont: Lato
-monofont: Inconsolata
+mainfont: Ubuntu Light
+monofont: Ubuntu Mono
 monofontoptions: 'Scale=0.9'
 ---
 
